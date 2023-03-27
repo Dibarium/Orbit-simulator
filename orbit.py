@@ -68,13 +68,13 @@ def scalaire_foix_vecteur(u : tuple, k: int):
 
 if __name__ == "__main__":
     #Pygame
-    size = (1250, 720 )
-    screen = pygame.display.set_mode(size)
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+    
     pygame.display.set_caption("Ma fenêtre Pygame")
 
 
-    terre = OrbitingObject(init_speed_x = 0, init_speed_y = 0, x = 0, y = 0, masse = 5.9*10**24, size = 20, color = (0,0,250))
-    lune = OrbitingObject(init_speed_x = 200000000000000, init_speed_y = 0, x = 0, y = 384400*10**3, masse = 7.6*10**22, size = 10, color = (250,0,0))
+    terre = OrbitingObject(init_speed_x = 0, init_speed_y = 0, x = 0, y = 0, masse = 5.9737*10**24, size = 20, color = (0,0,250))
+    lune = OrbitingObject(init_speed_x = 300000000000000, init_speed_y = 0, x = 0, y = 384400*10**3, masse = 7.6*10**22, size = 10, color = (250,0,0))
     lune.draw(screen)
     terre.draw(screen)
     pygame.display.flip()
@@ -84,12 +84,24 @@ if __name__ == "__main__":
     dx = 0.000000001
     actual_time = time.time()
     last_time = time.time()
-    while actual_time-starttime < 10000:
+    end = False
+    while end == False:
         last_time = time.time()
         if last_time-actual_time > dx: #Permet de faire bouger les choses toutes les dx = 0.5 secondes
             actual_time = time.time()
 
-            print(lune.getposition())
+            for event in pygame.event.get():
+                
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        end = True
+                        break # break out of the for loop
+                    elif event.type == pygame.QUIT:
+                        end = True
+                        break # break out of the for loop
+                if end:
+                    break # to break out of the while loop
+            screen.fill((0,0,0))
 
             #Pré calcul pour force appliqué à la lune
             dAB = distance(terre.getposition(), lune.getposition()) #calcul la distance entre la terre et la lune
@@ -98,8 +110,18 @@ if __name__ == "__main__":
             uAB = scalaire_foix_vecteur(uAB, -fAB) #met à l'échelle de la force le vecteur uAB le - c'est pour dire que c'est une attraction
             lune.setvelocity(uAB) #Application des forces à la lune
             lune.update(dx)
-            screen.fill((0,0,0))
+        
             lune.draw(screen)
+
+            #Pré calcul pour force appliqué à la terre
+            
+            dAB = distance(terre.getposition(), lune.getposition()) #calcul la distance entre la terre et la lune
+            fAB = Fg(terre.masse, lune.masse, dAB) #calcul la force exercé par la terre sur la lune
+            uAB = normalisation(creervecteur(terre.getposition(), lune.getposition())) #créer une vecteur normalisé qui part de la lune vers la terre
+            uAB = scalaire_foix_vecteur(uAB, fAB)
+            terre.setvelocity(uAB) #Application des forces à la lune
+            terre.update(dx)
+            
 
             terre.draw(screen)
             
