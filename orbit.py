@@ -36,14 +36,26 @@ class OrbitingObject:
         return (self.speed_x,self.speed_y)
 
     def draw(self, fenetre):
-        pygame.draw.circle(fenetre, self.color, (self.x/1000000, self.y/1000000), self.size)
+        pygame.draw.circle(fenetre, self.color, (self.x/1000000 + 500, self.y/1000000 +100), self.size)
     
-    def calculforceavec(self, object):
-        dAB = distance(object.getposition(), self.getposition()) #calcul la distance entre la terre et la lune
-        fAB = Fg(self.masse, object.masse, dAB) #calcul la force exercé par la terre sur la lune
-        uAB = normalisation(creervecteur(self.getposition(),object.getposition() )) #créer une vecteur normalisé qui part de la lune vers la terre
-        uAB = scalaire_foix_vecteur(uAB, fAB) #met à l'échelle de la force le vecteur uAB le - c'est pour dire que c'est une attraction
+    def calculforceavec(self, listeobject : list):
+        listeforce = []
+        for object in listeobject:
+            dAB = distance(object.getposition(), self.getposition()) #calcul la distance entre la terre et la lune
+            fAB = Fg(self.masse, object.masse, dAB) #calcul la force exercé par la terre sur la lune
+            uAB = normalisation(creervecteur(self.getposition(),object.getposition() )) #créer une vecteur normalisé qui part de la lune vers la terre
+            listeforce.append(scalaire_foix_vecteur(uAB, fAB)) #met à l'échelle de la force le vecteur uAB le - c'est pour dire que c'est une attraction
+        print(listeforce)
+        uAB = sommevecteur(listeforce)
         self.setvelocity(uAB) #Application des forces à la lune
+
+def sommevecteur(listedetuple : list) -> tuple:
+    liste = [0,0]
+    for i in listedetuple:
+        for y in range(0,len(i)):
+            liste[y]+=i[y]
+    return tuple(liste)
+
 
 def scalaire(u : tuple, v : tuple) -> float:
     return sum([u[i]*v[i] for i in range(0,len(u))])
@@ -77,11 +89,12 @@ if __name__ == "__main__":
     
     pygame.display.set_caption("Ma fenêtre Pygame")
 
-
-    terre = OrbitingObject(init_speed_x = 0, init_speed_y = 0, x = 0, y = 0, masse = 5.9737*10**24, size = 5, color = (0,0,250))
-    lune = OrbitingObject(init_speed_x = 2000000000000000, init_speed_y = 2000000000000000, x = 384400*10**3, y = 10**8, masse = 5.9737*10**24, size = 5, color = (250,0,0))
-    lune.draw(screen)
-    terre.draw(screen)
+    entities = [OrbitingObject(init_speed_x = 2000000000000000, init_speed_y = 2000000000000000, x = 0, y = 0, masse = 5.9737*10**24, size = 5, color = (0,0,250)),
+        OrbitingObject(init_speed_x = 0, init_speed_y = 2000000000000000, x = 384400*10**3, y = 0, masse = 5.9737*10**24, size = 5, color = (250,0,0)),
+        OrbitingObject(init_speed_x = 0, init_speed_y = 0, x = 0, y = 384400*10**3, masse = 5.9737*10**24, size = 5, color = (0,250,0))]
+     
+    for i in entities:
+        i.draw(screen)
     pygame.display.flip()
 
     
@@ -111,27 +124,12 @@ if __name__ == "__main__":
             
             #Calculs ----------------------------------------------------------------------------------------
 
-            #calcul pour force appliqué à la lune
-            lune.calculforceavec(terre)
-            lune.update(dx)
-        
-            lune.draw(screen)
-
-            #calcul pour force appliqué à la terre
-            
-            terre.calculforceavec(lune)
-            terre.update(dx)
-            
-
-            terre.draw(screen)
+            #calcul pour force appliqué aux entités
+            for i in range(0,len(entities)):
+                entities[i].calculforceavec([x for x in entities if x!=entities[i]])
+                entities[i].update(dx)
+                entities[i].draw(screen)
             
             pygame.display.flip()
             screen.fill((0,0,0))
     pygame.quit()
-
-            
-            
-
-
-
- 
